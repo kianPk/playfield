@@ -865,11 +865,11 @@ Ammo().then((Ammo) => {
   function start() {
     createWorld();
     if (isTouchscreenDevice()) {
-      // Frame the earth ball in the middle of the phone screen
-      camera.position.set(0, 11, 20);
-      camera.fov = 40;
+      // Frame the earth ball dead-center on the phone screen
+      camera.position.set(0, 8.5, 15);
+      camera.fov = 38;
       camera.updateProjectionMatrix();
-      camera.lookAt(0, 1.0, 0);
+      camera.lookAt(0, 2.2, 0);
     }
     createPhysicsWorld();
 

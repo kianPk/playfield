@@ -16,22 +16,23 @@ export function rotateCamera(ballPosition) {
   var targetPos;
   const mobile = isTouchscreenDevice();
 
-  // Phones: keep the earth globe centered and closer in frame
+  // Phones: keep the earth globe dead-center in the viewport
   if (mobile) {
     targetPos = new THREE.Vector3(
       ballPosition.position.x,
-      ballPosition.position.y + 11,
-      ballPosition.position.z + 20
+      ballPosition.position.y + 6.5,
+      ballPosition.position.z + 15
     );
-    camPos.lerp(targetPos, 0.12);
+    camPos.lerp(targetPos, 0.14);
     camera.position.copy(camPos);
+    // look slightly above ball center so the globe sits mid-screen, not high
     camera.lookAt(
       ballPosition.position.x,
-      ballPosition.position.y + 1.0,
+      ballPosition.position.y + 0.4,
       ballPosition.position.z
     );
-    if (camera.fov !== 40) {
-      camera.fov = 40;
+    if (camera.fov !== 38) {
+      camera.fov = 38;
       camera.updateProjectionMatrix();
     }
     return;
