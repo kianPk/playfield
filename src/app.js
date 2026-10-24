@@ -909,14 +909,14 @@ Ammo().then((Ammo) => {
     //   false
     // );
 
-    createBox(35, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
+    createBox(35, 2, -70, 4, 4, 1, boxTexture.globe, URL.telegram, 0x229ED9, true);
+    createBox(43, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
 
-    // floatingLabel(3.875, 4.5, -70, 'Twitter');
     floatingLabel(11.875, 4.5, -70, 'Github');
     floatingLabel(19.125, 4.5, -70, 'Website');
     floatingLabel(26.875, 4.5, -70, 'Email');
-    // floatingLabel(35, 6.5, -70, '  Static \nWebsite');
-    floatingLabel(35, 6.5, -70, '  Portfolio\n   site');
+    floatingLabel(35, 4.5, -70, 'Telegram');
+    floatingLabel(43, 6.5, -70, '  Portfolio\n   site');
     // floatingLabel(44, 6.5, -70, '   How I \nmade this');
 
     // allSkillsSection(-50, 0.025, 20, 40, 40, boxTexture.allSkills);

@@ -75,10 +75,12 @@ export function isTouchscreenDevice() {
 }
 
 export function touchEvent(coordinates) {
-  if (coordinates.x > 30) {
+  // Lower deadzone for smaller mobile joysticks
+  const dead = 18;
+  if (coordinates.x > dead) {
     moveDirection.right = 1;
     moveDirection.left = 0;
-  } else if (coordinates.x < -30) {
+  } else if (coordinates.x < -dead) {
     moveDirection.left = 1;
     moveDirection.right = 0;
   } else {
@@ -86,10 +88,10 @@ export function touchEvent(coordinates) {
     moveDirection.left = 0;
   }
 
-  if (coordinates.y > 30) {
+  if (coordinates.y > dead) {
     moveDirection.back = 1;
     moveDirection.forward = 0;
-  } else if (coordinates.y < -30) {
+  } else if (coordinates.y < -dead) {
     moveDirection.forward = 1;
     moveDirection.back = 0;
   } else {

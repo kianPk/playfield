@@ -45,5 +45,6 @@ URL.email = 'mailto:kianzarandi701@gmail.com';
 URL.githubBagholder = 'https://github.com/kianPk/vaultforge';
 URL.githubHomeSweetHome = 'https://github.com/kianPk/loadforge';
 URL.devTo = 'https://kianpk.github.io/kianPk/';
+URL.telegram = 'https://t.me/Kian_asli';
 
 export { billboardTextures, boxTexture, inputText, URL, stoneTexture, woodTexture };
