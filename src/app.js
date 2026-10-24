@@ -713,7 +713,8 @@ Ammo().then((Ammo) => {
   }
 
   function moveBall() {
-    let scalingFactor = 20;
+    // Slightly stronger on touch so phone tilt feels responsive
+    let scalingFactor = isTouchscreenDevice() ? 26 : 20;
     let moveX = moveDirection.right - moveDirection.left;
     let moveZ = moveDirection.back - moveDirection.forward;
     let moveY = 0;
@@ -864,10 +865,11 @@ Ammo().then((Ammo) => {
   function start() {
     createWorld();
     if (isTouchscreenDevice()) {
-      camera.position.set(0, 14, 26);
-      camera.fov = 42;
+      // Frame the earth ball in the middle of the phone screen
+      camera.position.set(0, 11, 20);
+      camera.fov = 40;
       camera.updateProjectionMatrix();
-      camera.lookAt(0, 1.2, 0);
+      camera.lookAt(0, 1.0, 0);
     }
     createPhysicsWorld();
 
@@ -921,7 +923,7 @@ Ammo().then((Ammo) => {
     createBox(27, 2, -70, 4, 4, 1, boxTexture.mail, 'mailto:kianzarandi701@gmail.com', 0x000000, false);
     createBox(35, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
     // Telegram at the end — same icon-tile style as GitHub
-    createBox(43, 2, -70, 4, 4, 1, boxTexture.Telegram, URL.telegram, 0x229ED9, true);
+    createBox(43, 2, -70, 4, 4, 1, boxTexture.Telegram, URL.telegram, 0x229ED9, false);
 
     floatingLabel(11.875, 4.5, -70, 'Github');
     floatingLabel(19.125, 4.5, -70, 'Website');

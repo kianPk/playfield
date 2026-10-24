@@ -115,6 +115,13 @@ export function requestTiltPermission() {
   return Promise.resolve(true);
 }
 
+function tiltAxis(value, dead, span) {
+  const mag = Math.abs(value);
+  if (mag <= dead) return 0;
+  // Analog 0→1 so gentle tilts nudge the ball and hard tilts roll faster
+  return Math.min(1, (mag - dead) / span);
+}
+
 export function setupDeviceTilt() {
   if (tiltEnabled || !isTouchscreenDevice()) return;
   tiltEnabled = true;
@@ -126,14 +133,17 @@ export function setupDeviceTilt() {
     const gamma = event.gamma;
     if (beta == null || gamma == null) return;
 
-    const dead = 7;
+    const dead = 5;
+    const span = 28;
     // Portrait: tilt phone left/right → roll left/right
-    moveDirection.right = gamma > dead ? 1 : 0;
-    moveDirection.left = gamma < -dead ? 1 : 0;
+    const gx = tiltAxis(gamma, dead, span);
+    moveDirection.right = gamma > 0 ? gx : 0;
+    moveDirection.left = gamma < 0 ? gx : 0;
     // beta ~45° when phone is upright; lean away / toward rolls forward / back
     const b = beta - 45;
-    moveDirection.forward = b < -dead ? 1 : 0;
-    moveDirection.back = b > dead ? 1 : 0;
+    const bz = tiltAxis(b, dead, span);
+    moveDirection.forward = b < 0 ? bz : 0;
+    moveDirection.back = b > 0 ? bz : 0;
   };
 
   window.addEventListener("deviceorientation", onOrient, true);

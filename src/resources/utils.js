@@ -20,18 +20,18 @@ export function rotateCamera(ballPosition) {
   if (mobile) {
     targetPos = new THREE.Vector3(
       ballPosition.position.x,
-      ballPosition.position.y + 14,
-      ballPosition.position.z + 26
+      ballPosition.position.y + 11,
+      ballPosition.position.z + 20
     );
-    camPos.lerp(targetPos, 0.1);
+    camPos.lerp(targetPos, 0.12);
     camera.position.copy(camPos);
     camera.lookAt(
       ballPosition.position.x,
-      ballPosition.position.y + 1.2,
+      ballPosition.position.y + 1.0,
       ballPosition.position.z
     );
-    if (camera.fov !== 42) {
-      camera.fov = 42;
+    if (camera.fov !== 40) {
+      camera.fov = 40;
       camera.updateProjectionMatrix();
     }
     return;
