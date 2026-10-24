@@ -23,25 +23,25 @@ export function rotateCamera(ballPosition, deltaTime = 1 / 60) {
   const follow = mobile ? 1 - Math.exp(-3.2 * dt) : 1 - Math.exp(-2.4 * dt);
   const lookFollow = 1 - Math.exp(-4.0 * dt);
 
-  // Phones: farther behind the globe, still centered
+  // Phones: ~2× farther behind the globe for a wider, clearer view
   if (mobile) {
     targetPos = new THREE.Vector3(
       ballPosition.position.x,
-      ballPosition.position.y + 11,
-      ballPosition.position.z + 26
+      ballPosition.position.y + 22,
+      ballPosition.position.z + 52
     );
     camPos.lerp(targetPos, follow);
     camera.position.copy(camPos);
     lookTarget.set(
       ballPosition.position.x,
-      ballPosition.position.y + 0.6,
+      ballPosition.position.y + 0.8,
       ballPosition.position.z
     );
     if (!lookCurrent) lookCurrent = lookTarget.clone();
     lookCurrent.lerp(lookTarget, lookFollow);
     camera.lookAt(lookCurrent);
-    if (camera.fov !== 40) {
-      camera.fov = 40;
+    if (camera.fov !== 38) {
+      camera.fov = 38;
       camera.updateProjectionMatrix();
     }
     return;

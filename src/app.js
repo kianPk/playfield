@@ -909,9 +909,9 @@ Ammo().then((Ammo) => {
   function start() {
     createWorld();
     if (isTouchscreenDevice()) {
-      // Farther behind the earth, still framed mid-screen
-      camera.position.set(0, 12, 28);
-      camera.fov = 40;
+      // ~2× farther behind the earth for a clearer phone view
+      camera.position.set(0, 24, 56);
+      camera.fov = 38;
       camera.updateProjectionMatrix();
       camera.lookAt(0, 1.2, 0);
     }
