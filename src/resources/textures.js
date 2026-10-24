@@ -11,6 +11,7 @@ boxTexture.twitter = './src/jsm/twitter.png';
 boxTexture.LinkedIn = './src/jsm/linkedInLogo.png';
 boxTexture.mail = './src/jsm/envelope.png';
 boxTexture.globe = './src/jsm/thunder.png';
+boxTexture.Telegram = './src/jsm/telegramLogo.png';
 boxTexture.reactIcon = './src/jsm/react.png';
 boxTexture.allSkills = './src/jsm/allSkills.png';
 boxTexture.lensFlareMain = './src/jsm/lensflare0.png';

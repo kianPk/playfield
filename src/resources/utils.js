@@ -2,19 +2,40 @@
 import * as THREE from 'three';
 import { camera, renderer, scene } from './world';
 import { cursorHoverObjects } from '../app';
+import { isTouchscreenDevice } from './eventHandlers';
 
 export const pickPosition = { x: 0, y: 0 };
 
 export function rotateCamera(ballPosition) {
-  // current camera position
   var camPos = new THREE.Vector3(
     camera.position.x,
     camera.position.y,
     camera.position.z
   );
 
-  // target camera position
   var targetPos;
+  const mobile = isTouchscreenDevice();
+
+  // Phones: keep the earth globe centered and closer in frame
+  if (mobile) {
+    targetPos = new THREE.Vector3(
+      ballPosition.position.x,
+      ballPosition.position.y + 14,
+      ballPosition.position.z + 26
+    );
+    camPos.lerp(targetPos, 0.1);
+    camera.position.copy(camPos);
+    camera.lookAt(
+      ballPosition.position.x,
+      ballPosition.position.y + 1.2,
+      ballPosition.position.z
+    );
+    if (camera.fov !== 42) {
+      camera.fov = 42;
+      camera.updateProjectionMatrix();
+    }
+    return;
+  }
 
   //1
   if (
@@ -92,7 +113,6 @@ export function launchClickPosition(event) {
   const intersectedObjects = myRaycaster.intersectObjects(scene.children);
   if (intersectedObjects.length) {
     // pick the first object. It's the closest one
-    const pickedObject = intersectedObjects[0].object;
     if (intersectedObjects[0].object.userData.URL)
       window.open(intersectedObjects[0].object.userData.URL);
     else {
@@ -117,52 +137,3 @@ export function launchHover(event) {
     document.getElementById('document-body').style.cursor = 'default';
   }
 }
-
-//deprecated camera function
-/*
-function rotateCamera(ballPosition) {
-  //1
-  if (
-    (ballPosition.position.x < 77 &&
-      ballPosition.position.x > 42 &&
-      ballPosition.position.z > -20 &&
-      ballPosition.position.z < 40) ||
-    (ballPosition.position.x < -2 && ballPosition.position.z < -28) ||
-    (ballPosition.position.x < -25 &&
-      ballPosition.position.x > -70 &&
-      ballPosition.position.z > -10 &&
-      ballPosition.position.z < 40)
-  ) {
-    camera.position.x = ballPosition.position.x;
-    camera.position.y = ballPosition.position.y + 50;
-    camera.position.z = ballPosition.position.z + 40;
-    camera.lookAt(ballPosition.position);
-
-    //2
-  } else if (
-    ballPosition.position.x > -3 &&
-    ballPosition.position.x < 22 &&
-    ballPosition.position.z > 31 &&
-    ballPosition.position.z < 58
-  ) {
-    camera.position.x = ballPosition.position.x;
-    camera.position.y = ballPosition.position.y + 50;
-    camera.position.z = ballPosition.position.z + 40;
-    camera.lookAt(ballPosition.position);
-
-    //3
-  } else if (ballPosition.position.z > 50) {
-    camera.position.x = ballPosition.position.x;
-    camera.position.y = ballPosition.position.y + 10;
-    camera.position.z = ballPosition.position.z + 40;
-    camera.lookAt(ballPosition.position);
-
-    //no change
-  } else {
-    camera.position.x = ballPosition.position.x;
-    camera.position.y = ballPosition.position.y + 30;
-    camera.position.z = ballPosition.position.z + 60;
-    camera.lookAt(ballPosition.position);
-  }
-}
-*/

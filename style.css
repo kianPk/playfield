@@ -197,34 +197,6 @@ select {
   min-height: 48px;
 }
 
-.social-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin: 0 auto 18px;
-  padding: 0 16px;
-}
-
-.social-row a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: #0b101c;
-  background: #22d3ee;
-}
-
-.social-row a.ghost {
-  background: transparent;
-  color: #e2e8f0;
-  border: 1px solid rgba(226, 232, 240, 0.35);
-}
 
 #start-button:hover {
   cursor: pointer;

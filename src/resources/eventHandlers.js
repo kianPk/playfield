@@ -100,6 +100,45 @@ export function touchEvent(coordinates) {
   }
 }
 
+let tiltEnabled = false;
+export let joystickActive = false;
+
+export function requestTiltPermission() {
+  if (
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  ) {
+    return DeviceOrientationEvent.requestPermission()
+      .then((state) => state === "granted")
+      .catch(() => false);
+  }
+  return Promise.resolve(true);
+}
+
+export function setupDeviceTilt() {
+  if (tiltEnabled || !isTouchscreenDevice()) return;
+  tiltEnabled = true;
+
+  const onOrient = (event) => {
+    if (joystickActive) return;
+    // beta: front/back, gamma: left/right
+    const beta = event.beta;
+    const gamma = event.gamma;
+    if (beta == null || gamma == null) return;
+
+    const dead = 7;
+    // Portrait: tilt phone left/right → roll left/right
+    moveDirection.right = gamma > dead ? 1 : 0;
+    moveDirection.left = gamma < -dead ? 1 : 0;
+    // beta ~45° when phone is upright; lean away / toward rolls forward / back
+    const b = beta - 45;
+    moveDirection.forward = b < -dead ? 1 : 0;
+    moveDirection.back = b > dead ? 1 : 0;
+  };
+
+  window.addEventListener("deviceorientation", onOrient, true);
+}
+
 export function createJoystick(parent) {
   const maxDiff = 62; //how far drag can go
   const stick = document.createElement("div");
@@ -119,6 +158,7 @@ export function createJoystick(parent) {
   function handleMouseDown(event) {
     event.preventDefault();
     stick.style.transition = "0s";
+    joystickActive = true;
 
     if (event.changedTouches) {
       dragStart = {
@@ -161,6 +201,7 @@ export function createJoystick(parent) {
     stick.style.transform = `translate3d(0px, 0px, 0px)`;
     dragStart = null;
     currentPos = { x: 0, y: 0 };
+    joystickActive = false;
     moveDirection.forward = 0;
     moveDirection.left = 0;
     moveDirection.right = 0;

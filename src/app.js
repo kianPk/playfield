@@ -3,7 +3,15 @@ import { WEBGL } from './WebGL';
 import * as Ammo from './builds/ammo';
 import { billboardTextures, boxTexture, inputText, URL, stoneTexture, woodTexture } from './resources/textures';
 
-import { setupEventHandlers, moveDirection, isTouchscreenDevice, touchEvent, createJoystick } from './resources/eventHandlers';
+import {
+  setupEventHandlers,
+  moveDirection,
+  isTouchscreenDevice,
+  touchEvent,
+  createJoystick,
+  setupDeviceTilt,
+  requestTiltPermission,
+} from './resources/eventHandlers';
 
 import { preloadDivs, preloadOpacity, postloadDivs, startScreenDivs, startButton, noWebGL, fadeOutDivs } from './resources/preload';
 
@@ -121,7 +129,10 @@ Ammo().then((Ammo) => {
 
   // create ball
   function createBall() {
-    let pos = { x: 8.75, y: 0, z: 0 };
+    // Center the earth ball on mobile so it starts mid-screen
+    let pos = isTouchscreenDevice()
+      ? { x: 0, y: 0.5, z: 0 }
+      : { x: 8.75, y: 0, z: 0 };
     let radius = 2;
     let quat = { x: 0, y: 0, z: 0, w: 1 };
     let mass = 3;
@@ -762,6 +773,11 @@ Ammo().then((Ammo) => {
 
   //loading page section
   function startButtonEventListener() {
+    // iOS requires a user gesture before deviceorientation
+    requestTiltPermission().then(() => {
+      setupDeviceTilt();
+    });
+
     for (let i = 0; i < fadeOutDivs.length; i++) {
       fadeOutDivs[i].classList.add('fade-out');
     }
@@ -836,15 +852,23 @@ Ammo().then((Ammo) => {
 
   if (isTouchscreenDevice()) {
     document.getElementById('appDirections').innerHTML =
-      'Use the joystick in the bottom left to move the ball. Please use your device in portrait orientation!';
+      'Tilt your phone to roll the earth globe. Optional joystick bottom-left. Portrait works best.';
     createJoystick(document.getElementById('joystick-wrapper'));
     document.getElementById('joystick-wrapper').style.visibility = 'visible';
-    document.getElementById('joystick').style.visibility = 'visible';
+    // joystick element is created by createJoystick
+    const stick = document.getElementById('joystick');
+    if (stick) stick.style.visibility = 'visible';
   }
 
   //initialize world and begin
   function start() {
     createWorld();
+    if (isTouchscreenDevice()) {
+      camera.position.set(0, 14, 26);
+      camera.fov = 42;
+      camera.updateProjectionMatrix();
+      camera.lookAt(0, 1.2, 0);
+    }
     createPhysicsWorld();
 
     createGridPlane();
@@ -895,29 +919,15 @@ Ammo().then((Ammo) => {
     // );
 
     createBox(27, 2, -70, 4, 4, 1, boxTexture.mail, 'mailto:kianzarandi701@gmail.com', 0x000000, false);
-
-    // createBox(
-    //   44,
-    //   2,
-    //   -70,
-    //   4,
-    //   4,
-    //   1,
-    //   boxTexture.writing,
-    //   URL.devTo,
-    //   0x000000,
-    //   false
-    // );
-
-    createBox(35, 2, -70, 4, 4, 1, boxTexture.globe, URL.telegram, 0x229ED9, true);
-    createBox(43, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
+    createBox(35, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
+    // Telegram at the end — same icon-tile style as GitHub
+    createBox(43, 2, -70, 4, 4, 1, boxTexture.Telegram, URL.telegram, 0x229ED9, true);
 
     floatingLabel(11.875, 4.5, -70, 'Github');
     floatingLabel(19.125, 4.5, -70, 'Website');
     floatingLabel(26.875, 4.5, -70, 'Email');
-    floatingLabel(35, 4.5, -70, 'Telegram');
-    floatingLabel(43, 6.5, -70, '  Portfolio\n   site');
-    // floatingLabel(44, 6.5, -70, '   How I \nmade this');
+    floatingLabel(35, 6.5, -70, '  Portfolio\n   site');
+    floatingLabel(43, 4.5, -70, 'Telegram');
 
     // allSkillsSection(-50, 0.025, 20, 40, 40, boxTexture.allSkills);
     allSkillsSection(61, 0.025, 13, 30, 60, inputText.activities);
