@@ -6,7 +6,10 @@ import { isTouchscreenDevice } from './eventHandlers';
 
 export const pickPosition = { x: 0, y: 0 };
 
-export function rotateCamera(ballPosition) {
+let lookTarget = new THREE.Vector3();
+let lookCurrent = null;
+
+export function rotateCamera(ballPosition, deltaTime = 1 / 60) {
   var camPos = new THREE.Vector3(
     camera.position.x,
     camera.position.y,
@@ -15,24 +18,30 @@ export function rotateCamera(ballPosition) {
 
   var targetPos;
   const mobile = isTouchscreenDevice();
+  // Frame-rate independent easing — smoother follow on phone + desktop
+  const dt = Math.min(Math.max(deltaTime, 0.001), 0.05);
+  const follow = mobile ? 1 - Math.exp(-3.2 * dt) : 1 - Math.exp(-2.4 * dt);
+  const lookFollow = 1 - Math.exp(-4.0 * dt);
 
-  // Phones: keep the earth globe dead-center in the viewport
+  // Phones: farther behind the globe, still centered
   if (mobile) {
     targetPos = new THREE.Vector3(
       ballPosition.position.x,
-      ballPosition.position.y + 6.5,
-      ballPosition.position.z + 15
+      ballPosition.position.y + 11,
+      ballPosition.position.z + 26
     );
-    camPos.lerp(targetPos, 0.14);
+    camPos.lerp(targetPos, follow);
     camera.position.copy(camPos);
-    // look slightly above ball center so the globe sits mid-screen, not high
-    camera.lookAt(
+    lookTarget.set(
       ballPosition.position.x,
-      ballPosition.position.y + 0.4,
+      ballPosition.position.y + 0.6,
       ballPosition.position.z
     );
-    if (camera.fov !== 38) {
-      camera.fov = 38;
+    if (!lookCurrent) lookCurrent = lookTarget.clone();
+    lookCurrent.lerp(lookTarget, lookFollow);
+    camera.lookAt(lookCurrent);
+    if (camera.fov !== 40) {
+      camera.fov = 40;
       camera.updateProjectionMatrix();
     }
     return;
@@ -89,9 +98,12 @@ export function rotateCamera(ballPosition) {
     );
   }
 
-  camPos.lerp(targetPos, 0.033);
+  camPos.lerp(targetPos, follow);
   camera.position.copy(camPos);
-  camera.lookAt(ballPosition.position);
+  lookTarget.copy(ballPosition.position);
+  if (!lookCurrent) lookCurrent = lookTarget.clone();
+  lookCurrent.lerp(lookTarget, lookFollow);
+  camera.lookAt(lookCurrent);
 }
 
 export function getCanvasRelativePosition(event) {

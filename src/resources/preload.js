@@ -5,20 +5,31 @@ export let startScreenDivs = document.getElementsByClassName('start-screen');
 export let startButton = document.getElementById('start-button');
 export let fadeOutDivs = document.getElementsByClassName('fadeOutDiv');
 
+export function hidePreloadOverlay() {
+  const overlay = document.getElementById('preload-overlay');
+  if (overlay) {
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 420);
+  }
+  for (let i = 0; i < preloadDivs.length; i++) {
+    preloadDivs[i].style.visibility = 'hidden';
+    preloadDivs[i].style.display = 'none';
+  }
+}
+
 export function noWebGL() {
   for (let i = 0; i < preloadDivs.length; i++) {
-    preloadDivs[i].style.visibility = 'hidden'; // or
+    preloadDivs[i].style.visibility = 'hidden';
     preloadDivs[i].style.display = 'none';
   }
   for (let i = 0; i < postloadDivs.length; i++) {
-    // or
     postloadDivs[i].style.display = 'none';
   }
   for (let i = 0; i < preloadOpacity.length; i++) {
-    // or
     preloadOpacity[i].style.display = 'none';
   }
-  //document.getElementById("preload-overlay").style.display = "none";
   var warning = WEBGL.getWebGLErrorMessage();
   var a = document.createElement('a');
   var linkText = document.createTextNode('Click here to visit my static site');

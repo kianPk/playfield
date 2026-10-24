@@ -133,8 +133,8 @@ export function setupDeviceTilt() {
     const gamma = event.gamma;
     if (beta == null || gamma == null) return;
 
-    const dead = 5;
-    const span = 28;
+    const dead = 6;
+    const span = 34;
     // Portrait: tilt phone left/right → roll left/right
     const gx = tiltAxis(gamma, dead, span);
     moveDirection.right = gamma > 0 ? gx : 0;

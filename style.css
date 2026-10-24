@@ -361,9 +361,9 @@ select {
 }
 
 .fade-out {
-  animation: fade-out-animation 0.75s 1;
-  /* animation-duration: 0.25s; */
+  animation: fade-out-animation 0.4s ease-out 1;
   animation-fill-mode: forwards;
+  pointer-events: none;
 }
 
 @keyframes fade-out-animation {
@@ -372,8 +372,6 @@ select {
   }
   to {
     opacity: 0;
-    display: none;
-    visibility: 'hidden';
-    cursor: default;
+    visibility: hidden;
   }
 }

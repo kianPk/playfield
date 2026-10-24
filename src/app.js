@@ -13,7 +13,7 @@ import {
   requestTiltPermission,
 } from './resources/eventHandlers';
 
-import { preloadDivs, preloadOpacity, postloadDivs, startScreenDivs, startButton, noWebGL, fadeOutDivs } from './resources/preload';
+import { preloadDivs, preloadOpacity, postloadDivs, startScreenDivs, startButton, noWebGL, fadeOutDivs, hidePreloadOverlay } from './resources/preload';
 
 import {
   clock,
@@ -243,11 +243,13 @@ Ammo().then((Ammo) => {
     let quat = { x: 0, y: 0, z: 0, w: 1 };
     let mass = 0; //mass of zero = infinite mass
 
-    //load link logo
+    //load link logo — crisp front face
     const loader = new THREE.TextureLoader(manager);
     const texture = loader.load(boxTexture);
     texture.magFilter = THREE.LinearFilter;
-    texture.minFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
+    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     texture.encoding = THREE.sRGBEncoding;
     const loadedTexture = new THREE.MeshBasicMaterial({
       map: texture,
@@ -261,12 +263,12 @@ Ammo().then((Ammo) => {
     borderMaterial.color.convertSRGBToLinear();
 
     var materials = [
-      borderMaterial, // Left side
-      borderMaterial, // Right side
-      borderMaterial, // Top side   ---> THIS IS THE FRONT
-      borderMaterial, // Bottom side --> THIS IS THE BACK
-      loadedTexture, // Front side
-      borderMaterial, // Back side
+      borderMaterial, // Right (+x)
+      borderMaterial, // Left (-x)
+      borderMaterial, // Top (+y)
+      borderMaterial, // Bottom (-y)
+      loadedTexture, // Front (+z) — logo face
+      borderMaterial, // Back (-z)
     ];
 
     const linkBox = new THREE.Mesh(new THREE.BoxBufferGeometry(boxScale.x, boxScale.y, boxScale.z), materials);
@@ -712,30 +714,68 @@ Ammo().then((Ammo) => {
     physicsWorld.addRigidBody(body);
   }
 
-  function moveBall() {
-    // Slightly stronger on touch so phone tilt feels responsive
-    let scalingFactor = isTouchscreenDevice() ? 26 : 20;
+  function moveBall(deltaTime) {
+    // Gentler, blended velocity so tilt/keys feel smooth instead of snappy
+    let scalingFactor = isTouchscreenDevice() ? 22 : 18;
     let moveX = moveDirection.right - moveDirection.left;
     let moveZ = moveDirection.back - moveDirection.forward;
-    let moveY = 0;
+    let moveY = ballObject.position.y < 2.01 ? 0 : -0.2;
 
-    if (ballObject.position.y < 2.01) {
-      moveX = moveDirection.right - moveDirection.left;
-      moveZ = moveDirection.back - moveDirection.forward;
-      moveY = 0;
-    } else {
-      moveX = moveDirection.right - moveDirection.left;
-      moveZ = moveDirection.back - moveDirection.forward;
-      moveY = -0.25;
+    let physicsBody = ballObject.userData.physicsBody;
+    if (!physicsBody) return;
+
+    const dt = Math.min(Math.max(deltaTime || 1 / 60, 0.001), 0.05);
+    const blend = 1 - Math.exp(-8 * dt);
+
+    if (moveX === 0 && moveY === 0 && moveZ === 0) {
+      // Ease out residual horizontal speed when input stops
+      const v = physicsBody.getLinearVelocity();
+      const nx = v.x() * (1 - blend * 0.55);
+      const nz = v.z() * (1 - blend * 0.55);
+      physicsBody.setLinearVelocity(new Ammo.btVector3(nx, v.y(), nz));
+      return;
     }
 
-    // no movement
-    if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+    const targetX = moveX * scalingFactor;
+    const targetZ = moveZ * scalingFactor;
+    const targetY = moveY * scalingFactor;
+    const v = physicsBody.getLinearVelocity();
+    const nx = v.x() + (targetX - v.x()) * blend;
+    const ny = v.y() + (targetY - v.y()) * blend * 0.35;
+    const nz = v.z() + (targetZ - v.z()) * blend;
+    physicsBody.setLinearVelocity(new Ammo.btVector3(nx, ny, nz));
+  }
 
-    let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
-    resultantImpulse.op_mul(scalingFactor);
-    let physicsBody = ballObject.userData.physicsBody;
-    physicsBody.setLinearVelocity(resultantImpulse);
+  let enteredWorld = false;
+  function enterWorld() {
+    if (enteredWorld) return;
+    enteredWorld = true;
+
+    hidePreloadOverlay();
+    document.addEventListener('click', launchClickPosition);
+    createBeachBall();
+    setTimeout(() => {
+      document.addEventListener('mousemove', launchHover);
+    }, 600);
+
+    if (isTouchscreenDevice()) {
+      const needsPerm =
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function';
+      if (needsPerm) {
+        const armTilt = () => {
+          requestTiltPermission().then((ok) => {
+            if (ok) setupDeviceTilt();
+          });
+          window.removeEventListener('touchstart', armTilt, true);
+          window.removeEventListener('click', armTilt, true);
+        };
+        window.addEventListener('touchstart', armTilt, true);
+        window.addEventListener('click', armTilt, true);
+      } else {
+        setupDeviceTilt();
+      }
+    }
   }
 
   function renderFrame() {
@@ -744,10 +784,10 @@ Ammo().then((Ammo) => {
 
     const elapsedTime = galaxyClock.getElapsedTime() + 150;
 
-    let deltaTime = clock.getDelta();
+    let deltaTime = Math.min(clock.getDelta(), 0.05);
     if (!isTouchscreenDevice())
       if (document.hasFocus()) {
-        moveBall();
+        moveBall(deltaTime);
       } else {
         moveDirection.forward = 0;
         moveDirection.back = 0;
@@ -755,7 +795,7 @@ Ammo().then((Ammo) => {
         moveDirection.right = 0;
       }
     else {
-      moveBall();
+      moveBall(deltaTime);
     }
 
     updatePhysics(deltaTime);
@@ -766,38 +806,14 @@ Ammo().then((Ammo) => {
     stats.end();
 
     galaxyMaterial.uniforms.uTime.value = elapsedTime * 5;
-    //galaxyPoints.position.set(-50, -50, 0);
 
     // tells browser theres animation, update before the next repaint
     requestAnimationFrame(renderFrame);
   }
 
-  //loading page section
-  function startButtonEventListener() {
-    // iOS requires a user gesture before deviceorientation
-    requestTiltPermission().then(() => {
-      setupDeviceTilt();
-    });
-
-    for (let i = 0; i < fadeOutDivs.length; i++) {
-      fadeOutDivs[i].classList.add('fade-out');
-    }
-    setTimeout(() => {
-      document.getElementById('preload-overlay').style.display = 'none';
-    }, 750);
-
-    startButton.removeEventListener('click', startButtonEventListener);
-    document.addEventListener('click', launchClickPosition);
-    createBeachBall();
-
-    setTimeout(() => {
-      document.addEventListener('mousemove', launchHover);
-    }, 1000);
-  }
-
   function updatePhysics(deltaTime) {
-    // Step world
-    physicsWorld.stepSimulation(deltaTime, 10);
+    // Step world (fixed-ish substeps for smoother physics)
+    physicsWorld.stepSimulation(deltaTime, 12, 1 / 60);
 
     // Update rigid bodies
     for (let i = 0; i < rigidBodies.length; i++) {
@@ -820,43 +836,21 @@ Ammo().then((Ammo) => {
     }
 
     //check to see if ball is on text to rotate camera
-    rotateCamera(ballObject);
+    rotateCamera(ballObject, deltaTime);
   }
 
-  //document loading
-  manager.onStart = function (item, loaded, total) {
-    //console.log("Loading started");
-  };
+  //document loading — skip welcome splash; enter as soon as assets are ready
+  manager.onStart = function (item, loaded, total) {};
 
   manager.onLoad = function () {
-    var readyStateCheckInterval = setInterval(function () {
-      if (document.readyState === 'complete') {
-        clearInterval(readyStateCheckInterval);
-        for (let i = 0; i < preloadDivs.length; i++) {
-          preloadDivs[i].style.visibility = 'hidden'; // or
-          preloadDivs[i].style.display = 'none';
-        }
-        for (let i = 0; i < postloadDivs.length; i++) {
-          postloadDivs[i].style.visibility = 'visible'; // or
-          postloadDivs[i].style.display = 'block';
-        }
-      }
-    }, 1000);
-    //console.log("Loading complete");
+    enterWorld();
   };
 
-  manager.onError = function (url) {
-    //console.log("Error loading");
-  };
-
-  startButton.addEventListener('click', startButtonEventListener);
+  manager.onError = function (url) {};
 
   if (isTouchscreenDevice()) {
-    document.getElementById('appDirections').innerHTML =
-      'Tilt your phone to roll the earth globe. Optional joystick bottom-left. Portrait works best.';
     createJoystick(document.getElementById('joystick-wrapper'));
     document.getElementById('joystick-wrapper').style.visibility = 'visible';
-    // joystick element is created by createJoystick
     const stick = document.getElementById('joystick');
     if (stick) stick.style.visibility = 'visible';
   }
@@ -865,11 +859,11 @@ Ammo().then((Ammo) => {
   function start() {
     createWorld();
     if (isTouchscreenDevice()) {
-      // Frame the earth ball dead-center on the phone screen
-      camera.position.set(0, 8.5, 15);
-      camera.fov = 38;
+      // Farther behind the earth, still framed mid-screen
+      camera.position.set(0, 12, 28);
+      camera.fov = 40;
       camera.updateProjectionMatrix();
-      camera.lookAt(0, 2.2, 0);
+      camera.lookAt(0, 1.2, 0);
     }
     createPhysicsWorld();
 
@@ -892,44 +886,16 @@ Ammo().then((Ammo) => {
     createTextOnPlane(-42, 0.01, -53, inputText.bagholderBetsText, 20, 40);
     createTextOnPlane(-14, 0.01, -49, inputText.homeSweetHomeText, 20, 40);
 
-    createBox(12, 2, -70, 4, 4, 1, boxTexture.Github, URL.gitHub, 0x000000, true);
+    // Link tiles (Twitter removed) — evenly spaced, polished front faces
+    createBox(14, 2, -70, 4, 4, 1, boxTexture.Github, URL.gitHub, 0x0d1117, false);
+    createBox(23, 2, -70, 4, 4, 1, boxTexture.mail, 'mailto:kianzarandi701@gmail.com', 0x121212, false);
+    createBox(32, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x0b101c, false);
+    createBox(41, 2, -70, 4, 4, 1, boxTexture.Telegram, URL.telegram, 0x229ED9, false);
 
-    // createBox(
-    //   4,
-    //   2,
-    //   -70,
-    //   4,
-    //   4,
-    //   1,
-    //   boxTexture.twitter,
-    //   URL.twitter,
-    //   0xffffff,
-    //   true
-    // );
-
-    createBox(19, 2, -70, 4, 4, 1, boxTexture.twitter, URL.twitter, 0x0077b5, true);
-    // createBox(
-    //   35,
-    //   2,
-    //   -70,
-    //   4,
-    //   4,
-    //   1,
-    //   boxTexture.globe,
-    //   0xffffff,
-    //   false
-    // );
-
-    createBox(27, 2, -70, 4, 4, 1, boxTexture.mail, 'mailto:kianzarandi701@gmail.com', 0x000000, false);
-    createBox(35, 2, -70, 4, 4, 1, boxTexture.writing, URL.devTo, 0x000000, false);
-    // Telegram at the end — same icon-tile style as GitHub
-    createBox(43, 2, -70, 4, 4, 1, boxTexture.Telegram, URL.telegram, 0x229ED9, false);
-
-    floatingLabel(11.875, 4.5, -70, 'Github');
-    floatingLabel(19.125, 4.5, -70, 'Website');
-    floatingLabel(26.875, 4.5, -70, 'Email');
-    floatingLabel(35, 6.5, -70, '  Portfolio\n   site');
-    floatingLabel(43, 4.5, -70, 'Telegram');
+    floatingLabel(14, 4.5, -70, 'Github');
+    floatingLabel(23, 4.5, -70, 'Email');
+    floatingLabel(32, 6.0, -70, '  Portfolio\n   site');
+    floatingLabel(41, 4.5, -70, 'Telegram');
 
     // allSkillsSection(-50, 0.025, 20, 40, 40, boxTexture.allSkills);
     allSkillsSection(61, 0.025, 13, 30, 60, inputText.activities);

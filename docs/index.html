@@ -16,18 +16,14 @@
   <body id="document-body">
     <div id="WEBGLcontainer"></div>
     <div id="joystick-wrapper"></div>
-     <div class="fadeOutDiv preload-overlay" id="preload-overlay">
-      <div class="start-page-content-div fadeOutDiv">
-        <h1 class="postload start-page-text interactive-site-text fadeOutDiv">Welcome to Kian's interactive 3D playfield</h1>
-        <h1 id="appDirections" class="start-page-text joystick-directions-text postload fadeOutDiv">Phone: tilt your device to roll the earth · Desktop: arrow keys. Tap boxes for links.</h1>
-        <button id="start-button" class="postload fadeOutDiv">EXPLORE</button>
-      </div>
+    <div class="preload-overlay" id="preload-overlay">
       <div class="trinity-rings-spinner preload">
         <div class="circle preload"></div>
         <div class="circle preload"></div>
         <div class="circle preload"></div>
       </div>
-    <div class="loading-text-div preload">Loading<span class="loader__dot">.</span><span class="loader__dot">.</span><span class="loader__dot">.</span></div>
+      <div class="loading-text-div preload">Loading<span class="loader__dot">.</span><span class="loader__dot">.</span><span class="loader__dot">.</span></div>
+    </div>
     <div id="tooltip"></div>
     <script type="x-shader/x-vertex" id="vertexShader">
       varying vec3 vWorldPosition;
