@@ -40,6 +40,7 @@ import {
 import { simpleText, floatingLabel, allSkillsSection, createTextOnPlane } from './resources/surfaces';
 
 import { pickPosition, launchClickPosition, getCanvasRelativePosition, rotateCamera, launchHover } from './resources/utils';
+import { createVisitorIpTexture, paintVisitorIpScreen } from './resources/visitorIpScreen';
 
 export let cursorHoverObjects = [];
 
@@ -457,8 +458,8 @@ Ammo().then((Ammo) => {
     cursorHoverObjects.push(billboardSign);
   }
 
-  //create vertical billboard
-  function createBillboardRotated(x, y, z, textureImage = billboardTextures.grassImage, urlLink, rotation = 0) {
+  //create vertical billboard (phone-style). frontMap overrides the static image when provided.
+  function createBillboardRotated(x, y, z, textureImage = billboardTextures.grassImage, urlLink, rotation = 0, frontMap = null) {
     const billboardPoleScale = { x: 1, y: 2.5, z: 1 };
     const billboardSignScale = { x: 15, y: 20, z: 1 };
 
@@ -470,10 +471,12 @@ Ammo().then((Ammo) => {
         map: loader.load(woodTexture),
       })
     );
-    const texture = loader.load(textureImage);
+    const texture = frontMap || loader.load(textureImage);
     texture.magFilter = THREE.LinearFilter;
     texture.minFilter = THREE.LinearFilter;
-    texture.encoding = THREE.sRGBEncoding;
+    if (texture.encoding === undefined || texture.encoding === THREE.LinearEncoding) {
+      texture.encoding = THREE.sRGBEncoding;
+    }
     var borderMaterial = new THREE.MeshBasicMaterial({
       color: 0x000000,
     });
@@ -518,6 +521,40 @@ Ammo().then((Ammo) => {
     addRigidPhysics(billboardSign, billboardSignScale);
 
     cursorHoverObjects.push(billboardSign);
+    return billboardSign;
+  }
+
+  function applyVisitorIpToPhone(billboardSign) {
+    // Placeholder while geo loads
+    paintVisitorIpScreen({
+      ip: 'detecting…',
+      country: '…',
+      countryCode: '',
+      city: '',
+      region: '',
+      postal: '',
+      isp: '',
+      flagEmoji: '',
+    }).then((canvas) => {
+      const placeholder = new THREE.CanvasTexture(canvas);
+      placeholder.encoding = THREE.sRGBEncoding;
+      placeholder.needsUpdate = true;
+      if (billboardSign && billboardSign.material && billboardSign.material[4]) {
+        billboardSign.material[4].map = placeholder;
+        billboardSign.material[4].needsUpdate = true;
+      }
+    });
+
+    createVisitorIpTexture(THREE)
+      .then(({ texture, geo }) => {
+        if (!billboardSign || !billboardSign.material || !billboardSign.material[4]) return;
+        billboardSign.material[4].map = texture;
+        billboardSign.material[4].needsUpdate = true;
+        billboardSign.userData.visitorGeo = geo;
+      })
+      .catch(() => {
+        // keep placeholder / static fallback
+      });
   }
 
   //create X axis wall around entire plane
@@ -879,7 +916,15 @@ Ammo().then((Ammo) => {
 
     createBillboard(-45, 2.5, -78, billboardTextures.bagHolderBetsTexture, URL.githubBagholder, Math.PI * 0.17);
 
-    createBillboardRotated(-17, 1.25, -75, billboardTextures.homeSweetHomeTexture, URL.githubHomeSweetHome, Math.PI * 0.15);
+    const ipPhone = createBillboardRotated(
+      -17,
+      1.25,
+      -75,
+      billboardTextures.homeSweetHomeTexture,
+      URL.githubHomeSweetHome,
+      Math.PI * 0.15
+    );
+    applyVisitorIpToPhone(ipPhone);
 
     floydWords(16.2, 1, -20);
     createTextOnPlane(-70, 0.01, -48, inputText.terpSolutionsText, 20, 40);
