@@ -39,7 +39,7 @@ import { simpleText, floatingLabel, allSkillsSection, createTextOnPlane } from '
 
 import { pickPosition, launchClickPosition, getCanvasRelativePosition, rotateCamera, launchHover } from './resources/utils';
 import { createVisitorIpTexture, paintVisitorIpScreen } from './resources/visitorIpScreen';
-import { armFullscreenOnFirstGesture } from './resources/fullscreen';
+import { showMobileFullscreenGate, isTouchMobile } from './resources/fullscreen';
 
 export let cursorHoverObjects = [];
 
@@ -812,30 +812,37 @@ Ammo().then((Ammo) => {
       document.addEventListener('mousemove', launchHover);
     }, 600);
 
-    if (isTouchscreenDevice()) {
-      // First tap → immersive fullscreen so the 3D scene fills the phone
+    if (isTouchscreenDevice() || isTouchMobile()) {
+      // Gate: tap → browser fullscreen so the 3D scene fills the phone
       try {
-        armFullscreenOnFirstGesture();
-      } catch (e) {}
-
-      const needsPerm =
-        typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function';
-      if (needsPerm) {
-        const armTilt = () => {
-          requestTiltPermission().then((ok) => {
-            if (ok) setupDeviceTilt();
-          });
-          window.removeEventListener('touchstart', armTilt, true);
-          window.removeEventListener('click', armTilt, true);
-        };
-        window.addEventListener('touchstart', armTilt, true);
-        window.addEventListener('click', armTilt, true);
-      } else {
-        try {
-          setupDeviceTilt();
-        } catch (e) {}
+        showMobileFullscreenGate(function () {
+          armTiltControls();
+        });
+      } catch (e) {
+        armTiltControls();
       }
+    }
+  }
+
+  function armTiltControls() {
+    if (!isTouchscreenDevice() && !isTouchMobile()) return;
+    const needsPerm =
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function';
+    if (needsPerm) {
+      const armTilt = () => {
+        requestTiltPermission().then((ok) => {
+          if (ok) setupDeviceTilt();
+        });
+        window.removeEventListener('touchstart', armTilt, true);
+        window.removeEventListener('click', armTilt, true);
+      };
+      window.addEventListener('touchstart', armTilt, true);
+      window.addEventListener('click', armTilt, true);
+    } else {
+      try {
+        setupDeviceTilt();
+      } catch (e) {}
     }
   }
 

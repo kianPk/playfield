@@ -3,9 +3,7 @@ html {
   background: #000;
   width: 100%;
   height: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: 100lvh;
+  height: 100svh;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
@@ -22,32 +20,22 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
   width: 100%;
   height: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: 100lvh;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  height: 100svh;
   overflow: hidden;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Immersive: canvas paints edge-to-edge including under safe areas */
+/* Canvas fills the visible phone area exactly (JS pins pixel size) */
 #WEBGLcontainer {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
   width: 100%;
   height: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: 100lvh;
+  height: 100svh;
   background: #000;
   z-index: 0;
   overflow: hidden;
@@ -59,8 +47,10 @@ html:fullscreen,
 html:-webkit-full-screen,
 body:fullscreen,
 body:-webkit-full-screen {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
   background: #000;
 }
 
@@ -70,19 +60,87 @@ canvas {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100% !important;
-  width: 100vw !important;
-  height: 100% !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  height: 100lvh !important;
   max-width: none;
   background: #000;
   overscroll-behavior: none;
   touch-action: none;
   z-index: 1;
+}
+
+/* Tap-to-enter immersive fullscreen (hides browser chrome) */
+#fs-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity 0.25s ease;
+}
+#fs-gate.fs-gate-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.fs-gate-card {
+  text-align: center;
+  padding: 28px 32px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 18px;
+  background: rgba(11, 16, 28, 0.92);
+  max-width: 88vw;
+}
+.fs-gate-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #22d3ee;
+  margin-bottom: 10px;
+  font-family: 'Roboto', system-ui, sans-serif;
+}
+.fs-gate-sub {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  font-family: 'Roboto', system-ui, sans-serif;
+}
+.fs-gate-hint {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+#ios-a2hs {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(11, 16, 28, 0.95);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: 'Roboto', system-ui, sans-serif;
+}
+#ios-a2hs button {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
 }
 
 

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 import galaxyVertexShader from '../jsm/vertex.glsl';
 import galaxyFragmentShader from '../jsm/fragment.glsl';
-import { getViewportSize } from './fullscreen';
+import { getViewportSize, pinDomToViewport } from './fullscreen';
 
 //threejs variable declaration
 export let clock,
@@ -101,20 +101,20 @@ export function createWorld() {
 
 export function fitRendererToViewport() {
   if (!renderer || !camera) return;
-  const { w, h } = getViewportSize();
+  const pinned = pinDomToViewport();
+  const w = pinned.w;
+  const h = pinned.h;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
   const canvas = renderer.domElement;
-  canvas.style.width = '100vw';
-  canvas.style.height = '100vh';
-  canvas.style.height = '100dvh';
-  canvas.style.height = '100lvh';
   canvas.style.position = 'fixed';
-  canvas.style.top = '0';
-  canvas.style.left = '0';
-  canvas.style.right = '0';
-  canvas.style.bottom = '0';
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.style.top = pinned.top + 'px';
+  canvas.style.left = pinned.left + 'px';
+  canvas.style.right = 'auto';
+  canvas.style.bottom = 'auto';
   canvas.style.touchAction = 'none';
   canvas.style.zIndex = '1';
 }
