@@ -102,57 +102,139 @@ export function touchEvent(coordinates) {
 
 let tiltEnabled = false;
 export let joystickActive = false;
+let tiltPermissionAsked = false;
+
+export function needsTiltPermission() {
+  return (
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  );
+}
 
 export function requestTiltPermission() {
+  const tasks = [];
   if (
     typeof DeviceOrientationEvent !== "undefined" &&
     typeof DeviceOrientationEvent.requestPermission === "function"
   ) {
-    return DeviceOrientationEvent.requestPermission()
-      .then((state) => state === "granted")
-      .catch(() => false);
+    tasks.push(
+      DeviceOrientationEvent.requestPermission()
+        .then((state) => state === "granted")
+        .catch(() => false)
+    );
   }
-  return Promise.resolve(true);
+  if (
+    typeof DeviceMotionEvent !== "undefined" &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
+    tasks.push(
+      DeviceMotionEvent.requestPermission()
+        .then((state) => state === "granted")
+        .catch(() => false)
+    );
+  }
+  if (!tasks.length) return Promise.resolve(true);
+  return Promise.all(tasks).then((results) => results.some(Boolean));
 }
 
 function tiltAxis(value, dead, span) {
   const mag = Math.abs(value);
   if (mag <= dead) return 0;
-  // Analog 0→1 so gentle tilts nudge the ball and hard tilts roll faster
   return Math.min(1, (mag - dead) / span);
 }
 
+function applyTilt(leftRight, forwardBack) {
+  const dead = 3;
+  const span = 22;
+  const gx = tiltAxis(leftRight, dead, span);
+  moveDirection.right = leftRight > 0 ? gx : 0;
+  moveDirection.left = leftRight < 0 ? gx : 0;
+  const bz = tiltAxis(forwardBack, dead, span);
+  moveDirection.forward = forwardBack < 0 ? bz : 0;
+  moveDirection.back = forwardBack > 0 ? bz : 0;
+}
+
 export function setupDeviceTilt() {
-  if (tiltEnabled || !isTouchscreenDevice()) return;
+  if (tiltEnabled) return;
   tiltEnabled = true;
 
   const onOrient = (event) => {
     if (joystickActive) return;
-    // beta: front/back, gamma: left/right
-    const beta = event.beta;
-    const gamma = event.gamma;
+    let beta = event.beta; // -180..180 front/back
+    let gamma = event.gamma; // -90..90 left/right
     if (beta == null || gamma == null) return;
 
-    const dead = 6;
-    const span = 34;
-    // Portrait: tilt phone left/right → roll left/right
-    const gx = tiltAxis(gamma, dead, span);
-    moveDirection.right = gamma > 0 ? gx : 0;
-    moveDirection.left = gamma < 0 ? gx : 0;
-    // beta ~45° when phone is upright; lean away / toward rolls forward / back
-    const b = beta - 45;
-    const bz = tiltAxis(b, dead, span);
-    moveDirection.forward = b < 0 ? bz : 0;
-    moveDirection.back = b > 0 ? bz : 0;
+    // Normalize for screen orientation (portrait / landscape)
+    const angle =
+      (typeof window.orientation === "number"
+        ? window.orientation
+        : (window.screen.orientation && window.screen.orientation.angle) || 0) ||
+      0;
+
+    let lr = gamma;
+    let fb = beta - 45; // upright phone ≈ 45–70°
+    if (angle === 90) {
+      lr = beta;
+      fb = -gamma - 45;
+    } else if (angle === -90 || angle === 270) {
+      lr = -beta;
+      fb = gamma - 45;
+    } else if (angle === 180) {
+      lr = -gamma;
+      fb = -(beta - 45);
+    }
+
+    applyTilt(lr, fb);
+  };
+
+  const onMotion = (event) => {
+    if (joystickActive) return;
+    // Fallback when deviceorientation is blocked/unavailable
+    const a = event.accelerationIncludingGravity;
+    if (!a || a.x == null || a.y == null) return;
+    // Portrait: x = left/right, y = front/back (approx)
+    applyTilt(-a.x * 6, -(a.y + 6) * 4);
   };
 
   window.addEventListener("deviceorientation", onOrient, true);
+  window.addEventListener("deviceorientationabsolute", onOrient, true);
+  window.addEventListener("devicemotion", onMotion, true);
+}
+
+/**
+ * Enable tilt ASAP on Android; on iOS ask permission on first tap.
+ */
+export function enableMobileTilt() {
+  if (!isTouchscreenDevice()) return;
+
+  if (!needsTiltPermission()) {
+    setupDeviceTilt();
+    return;
+  }
+
+  // iOS: must request from a user gesture
+  const ask = (ev) => {
+    if (tiltPermissionAsked && tiltEnabled) return;
+    tiltPermissionAsked = true;
+    requestTiltPermission().then((ok) => {
+      if (ok) setupDeviceTilt();
+      // Even if permission UI was dismissed once, keep listening for a retry tap
+      if (!ok) tiltPermissionAsked = false;
+    });
+  };
+
+  window.addEventListener("touchend", ask, true);
+  window.addEventListener("click", ask, true);
+
+  // Also try immediately — some WebViews allow it without a prompt
+  requestTiltPermission().then((ok) => {
+    if (ok) setupDeviceTilt();
+  });
 }
 
 export function createJoystick(parent) {
-  const maxDiff = 62; //how far drag can go
+  const maxDiff = 62;
   const stick = document.createElement("div");
-  //stick.classList.add("joystick");
   stick.setAttribute("id", "joystick");
 
   stick.addEventListener("mousedown", handleMouseDown);
@@ -187,11 +269,9 @@ export function createJoystick(parent) {
   function handleMouseMove(event) {
     if (dragStart === null) return;
 
-    //console.log("entered handleMouseMove");
     if (event.changedTouches) {
       event.clientX = event.changedTouches[0].clientX;
       event.clientY = event.changedTouches[0].clientY;
-      //touchEvent(currentPos);
     }
 
     const xDiff = event.clientX - dragStart.x;

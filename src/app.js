@@ -7,8 +7,7 @@ import {
   setupEventHandlers,
   moveDirection,
   isTouchscreenDevice,
-  setupDeviceTilt,
-  requestTiltPermission,
+  enableMobileTilt,
 } from './resources/eventHandlers';
 
 import { preloadDivs, preloadOpacity, postloadDivs, startScreenDivs, startButton, noWebGL, fadeOutDivs, hidePreloadOverlay } from './resources/preload';
@@ -39,7 +38,6 @@ import { simpleText, floatingLabel, allSkillsSection, createTextOnPlane } from '
 
 import { pickPosition, launchClickPosition, getCanvasRelativePosition, rotateCamera, launchHover } from './resources/utils';
 import { createVisitorIpTexture, paintVisitorIpScreen } from './resources/visitorIpScreen';
-import { showMobileFullscreenGate, isTouchMobile } from './resources/fullscreen';
 
 export let cursorHoverObjects = [];
 
@@ -764,8 +762,8 @@ Ammo().then((Ammo) => {
   }
 
   function moveBall(deltaTime) {
-    // Gentler, blended velocity so tilt/keys feel smooth instead of snappy
-    let scalingFactor = isTouchscreenDevice() ? 22 : 18;
+    // Stronger on touch so phone tilt clearly rolls the globe
+    let scalingFactor = isTouchscreenDevice() ? 32 : 18;
     let moveX = moveDirection.right - moveDirection.left;
     let moveZ = moveDirection.back - moveDirection.forward;
     let moveY = ballObject.position.y < 2.01 ? 0 : -0.2;
@@ -812,38 +810,10 @@ Ammo().then((Ammo) => {
       document.addEventListener('mousemove', launchHover);
     }, 600);
 
-    if (isTouchscreenDevice() || isTouchMobile()) {
-      // Gate: tap → browser fullscreen so the 3D scene fills the phone
-      try {
-        showMobileFullscreenGate(function () {
-          armTiltControls();
-        });
-      } catch (e) {
-        armTiltControls();
-      }
-    }
-  }
-
-  function armTiltControls() {
-    if (!isTouchscreenDevice() && !isTouchMobile()) return;
-    const needsPerm =
-      typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function';
-    if (needsPerm) {
-      const armTilt = () => {
-        requestTiltPermission().then((ok) => {
-          if (ok) setupDeviceTilt();
-        });
-        window.removeEventListener('touchstart', armTilt, true);
-        window.removeEventListener('click', armTilt, true);
-      };
-      window.addEventListener('touchstart', armTilt, true);
-      window.addEventListener('click', armTilt, true);
-    } else {
-      try {
-        setupDeviceTilt();
-      } catch (e) {}
-    }
+    // Mobile: tilt phone to roll the earth (no joystick / no fullscreen gate)
+    try {
+      enableMobileTilt();
+    } catch (e) {}
   }
 
   function renderFrame() {
