@@ -66,21 +66,50 @@ export function createWorld() {
 
   dirLight.shadow.camera.far = 15000;
 
-  //Setup the renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  //renderer.setClearColor(0xbfd1e5);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  //renderer.shadowMap.type = THREE.BasicShadowMap;
-  document.body.appendChild(renderer.domElement);
+  //Setup the renderer — full-bleed on phones (no white letterbox)
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setClearColor(0x000000, 1);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const mount = document.getElementById('WEBGLcontainer') || document.body;
+  mount.appendChild(renderer.domElement);
+  fitRendererToViewport();
+  window.addEventListener('resize', fitRendererToViewport, false);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitRendererToViewport, false);
+    window.visualViewport.addEventListener('scroll', fitRendererToViewport, false);
+  }
 
   stats = new Stats();
-  document.body.appendChild(stats.dom);
+  // Keep FPS off phones — cleaner full-screen look
+  const touch =
+    'ontouchstart' in window ||
+    (window.navigator && window.navigator.msPointerEnabled);
+  if (!touch) {
+    document.body.appendChild(stats.dom);
+  } else {
+    stats.dom.style.display = 'none';
+  }
 
   renderer.gammaInput = true;
   renderer.gammaOutput = true;
 
   renderer.shadowMap.enabled = true;
+}
+
+export function fitRendererToViewport() {
+  if (!renderer || !camera) return;
+  const vv = window.visualViewport;
+  const w = Math.max(1, Math.floor((vv && vv.width) || window.innerWidth));
+  const h = Math.max(1, Math.floor((vv && vv.height) || window.innerHeight));
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+  const canvas = renderer.domElement;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.position = 'fixed';
+  canvas.style.inset = '0';
+  canvas.style.touchAction = 'none';
 }
 
 export function glowingParticles() {
