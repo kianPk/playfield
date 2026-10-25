@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      # Full webpack build is heavy/flaky (Ammo.js + legacy OpenSSL). Keep CI lean.
+      - name: Install
+        run: NODE_OPTIONS=--openssl-legacy-provider npm ci
+      - name: Syntax-check server
+        run: node --check server.js

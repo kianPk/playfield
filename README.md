@@ -9,7 +9,15 @@ Based on [0xFloyd/Portfolio_2020](https://github.com/0xFloyd/Portfolio_2020) (MI
 ## Controls
 
 - **Desktop:** arrow keys move the ball · click boxes to open links
-- **Mobile:** on-screen joystick · tap boxes
+- **Mobile:** tilt-only (DeviceOrientation) — no on-screen joystick · tap boxes
+
+There is no welcome splash / start gate — the world loads straight into play once assets are ready.
+
+## Highlights
+
+- **Telegram** link tile in the world (`t.me/Kian_asli`)
+- **Live visitor IP billboard** (phone-style sign painted from geo/IP lookup)
+- Mobile tilt control without fullscreen gate or joystick UI
 
 ## Stack
 
@@ -19,7 +27,7 @@ Based on [0xFloyd/Portfolio_2020](https://github.com/0xFloyd/Portfolio_2020) (MI
 
 ```bash
 npm install
-npm run build
+NODE_OPTIONS=--openssl-legacy-provider npm run build
 npm run dev
 # → http://localhost:8080
 ```
@@ -30,7 +38,7 @@ Or after build: `npm start`
 
 - Links → `src/resources/textures.js` (`URL.*`)
 - 3D name / role → `src/app.js` (`loadFloydText` / `loadEngineerText`)
-- Start screen copy → `index.html`
+- Visitor IP screen → `src/resources/visitorIpScreen.js`
 
 ## Credit
 
