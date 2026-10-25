@@ -7,8 +7,6 @@ import {
   setupEventHandlers,
   moveDirection,
   isTouchscreenDevice,
-  touchEvent,
-  createJoystick,
   setupDeviceTilt,
   requestTiltPermission,
 } from './resources/eventHandlers';
@@ -902,12 +900,7 @@ Ammo().then((Ammo) => {
 
   manager.onError = function (url) {};
 
-  if (isTouchscreenDevice()) {
-    createJoystick(document.getElementById('joystick-wrapper'));
-    document.getElementById('joystick-wrapper').style.visibility = 'visible';
-    const stick = document.getElementById('joystick');
-    if (stick) stick.style.visibility = 'visible';
-  }
+  // Mobile: no on-screen joystick — tilt the phone to roll the earth
 
   //initialize world and begin
   function start() {
@@ -972,7 +965,7 @@ Ammo().then((Ammo) => {
     let touchText, instructionsText;
     if (isTouchscreenDevice()) {
       touchText = 'Touch boxes with your \nfinger to open links';
-      instructionsText = '   Use the joystick in the bottom \nleft of the screen to move the ball.';
+      instructionsText = '   Tilt your phone to roll \nthe earth globe around.';
     } else {
       touchText = 'Click on boxes with \nthe mouse to open links';
       instructionsText = 'Use the arrow keys on your \n keyboard to move the ball.';

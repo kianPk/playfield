@@ -162,39 +162,7 @@ select {
   border-radius: 3px;
 }
 
-#joystick-wrapper {
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  width: 125px;
-  height: 125px;
-  position: fixed;
-  bottom: max(15px, env(safe-area-inset-bottom));
-  left: max(15px, env(safe-area-inset-left));
-  text-align: center;
-  border-radius: 100%;
-  display: flex; /* [1] */
-  justify-content: center; /* [2] */
-  align-items: center;
-  visibility: hidden;
-  opacity: 1;
-  z-index: 20;
-  touch-action: none;
-}
-
-#joystick {
-  background-color: rgba(0, 0, 0, 0.25);
-  border-radius: 100%;
-  cursor: pointer;
-  height: 45%;
-  user-select: none;
-  width: 45%;
-  margin: 0 auto;
-  visibility: hidden;
-  opacity: 1;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  -webkit-user-select: none; /* Chrome/Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+ */
-}
+/* On-screen joystick removed — mobile uses device tilt only */
 
 .preload-overlay {
   height: 100%;
@@ -373,12 +341,6 @@ select {
 }
 
 @media (max-width: 640px) {
-  #joystick-wrapper {
-    width: 110px;
-    height: 110px;
-    bottom: max(20px, env(safe-area-inset-bottom));
-  }
-
   .start-page-content-div {
     width: 100%;
     padding: 0 8px;
