@@ -1,0 +1,19 @@
+{
+  "name": "Playfield — Kian Zarandi",
+  "short_name": "Playfield",
+  "description": "Interactive 3D portfolio world",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

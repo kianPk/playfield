@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 import galaxyVertexShader from '../jsm/vertex.glsl';
 import galaxyFragmentShader from '../jsm/fragment.glsl';
+import { getViewportSize } from './fullscreen';
 
 //threejs variable declaration
 export let clock,
@@ -74,6 +75,8 @@ export function createWorld() {
   mount.appendChild(renderer.domElement);
   fitRendererToViewport();
   window.addEventListener('resize', fitRendererToViewport, false);
+  document.addEventListener('fullscreenchange', fitRendererToViewport, false);
+  document.addEventListener('webkitfullscreenchange', fitRendererToViewport, false);
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', fitRendererToViewport, false);
     window.visualViewport.addEventListener('scroll', fitRendererToViewport, false);
@@ -98,18 +101,22 @@ export function createWorld() {
 
 export function fitRendererToViewport() {
   if (!renderer || !camera) return;
-  const vv = window.visualViewport;
-  const w = Math.max(1, Math.floor((vv && vv.width) || window.innerWidth));
-  const h = Math.max(1, Math.floor((vv && vv.height) || window.innerHeight));
+  const { w, h } = getViewportSize();
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
   const canvas = renderer.domElement;
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.height = '100dvh';
+  canvas.style.height = '100lvh';
   canvas.style.position = 'fixed';
-  canvas.style.inset = '0';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.right = '0';
+  canvas.style.bottom = '0';
   canvas.style.touchAction = 'none';
+  canvas.style.zIndex = '1';
 }
 
 export function glowingParticles() {

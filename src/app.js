@@ -41,6 +41,7 @@ import { simpleText, floatingLabel, allSkillsSection, createTextOnPlane } from '
 
 import { pickPosition, launchClickPosition, getCanvasRelativePosition, rotateCamera, launchHover } from './resources/utils';
 import { createVisitorIpTexture, paintVisitorIpScreen } from './resources/visitorIpScreen';
+import { armFullscreenOnFirstGesture } from './resources/fullscreen';
 
 export let cursorHoverObjects = [];
 
@@ -809,6 +810,9 @@ Ammo().then((Ammo) => {
     }, 600);
 
     if (isTouchscreenDevice()) {
+      // First tap → immersive fullscreen so the 3D scene fills the phone
+      armFullscreenOnFirstGesture();
+
       const needsPerm =
         typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function';

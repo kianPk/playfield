@@ -3,7 +3,9 @@ html {
   background: #000;
   width: 100%;
   height: 100%;
+  height: 100vh;
   height: 100dvh;
+  height: 100lvh;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
@@ -18,10 +20,15 @@ body {
   font-size: 16px;
   overscroll-behavior: none;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  height: 100vh;
   height: 100dvh;
+  height: 100lvh;
   min-height: 100vh;
   min-height: -webkit-fill-available;
   overflow: hidden;
@@ -29,30 +36,55 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Immersive: canvas paints edge-to-edge including under safe areas */
 #WEBGLcontainer {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  height: 100vh;
   height: 100dvh;
+  height: 100lvh;
   background: #000;
   z-index: 0;
   overflow: hidden;
+}
+
+#WEBGLcontainer:fullscreen,
+#WEBGLcontainer:-webkit-full-screen,
+html:fullscreen,
+html:-webkit-full-screen,
+body:fullscreen,
+body:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  background: #000;
 }
 
 #WEBGLcontainer canvas,
 canvas {
   display: block;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100% !important;
+  width: 100vw !important;
   height: 100% !important;
+  height: 100vh !important;
   height: 100dvh !important;
+  height: 100lvh !important;
   max-width: none;
   background: #000;
   overscroll-behavior: none;
   touch-action: none;
+  z-index: 1;
 }
+
 
 #info {
   position: absolute;
