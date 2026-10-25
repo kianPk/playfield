@@ -800,16 +800,23 @@ Ammo().then((Ammo) => {
     if (enteredWorld) return;
     enteredWorld = true;
 
-    hidePreloadOverlay();
+    try {
+      hidePreloadOverlay();
+    } catch (e) {}
+
     document.addEventListener('click', launchClickPosition);
-    createBeachBall();
+    try {
+      createBeachBall();
+    } catch (e) {}
     setTimeout(() => {
       document.addEventListener('mousemove', launchHover);
     }, 600);
 
     if (isTouchscreenDevice()) {
       // First tap → immersive fullscreen so the 3D scene fills the phone
-      armFullscreenOnFirstGesture();
+      try {
+        armFullscreenOnFirstGesture();
+      } catch (e) {}
 
       const needsPerm =
         typeof DeviceOrientationEvent !== 'undefined' &&
@@ -825,16 +832,17 @@ Ammo().then((Ammo) => {
         window.addEventListener('touchstart', armTilt, true);
         window.addEventListener('click', armTilt, true);
       } else {
-        setupDeviceTilt();
+        try {
+          setupDeviceTilt();
+        } catch (e) {}
       }
     }
   }
 
   function renderFrame() {
-    // FPS stats module
-    stats.begin();
+    if (stats) stats.begin();
 
-    const elapsedTime = galaxyClock.getElapsedTime() + 150;
+    const elapsedTime = galaxyClock ? galaxyClock.getElapsedTime() + 150 : 0;
 
     let deltaTime = Math.min(clock.getDelta(), 0.05);
     if (!isTouchscreenDevice())
@@ -852,12 +860,16 @@ Ammo().then((Ammo) => {
 
     updatePhysics(deltaTime);
 
-    moveParticles();
+    try {
+      moveParticles();
+    } catch (e) {}
 
     renderer.render(scene, camera);
-    stats.end();
+    if (stats) stats.end();
 
-    galaxyMaterial.uniforms.uTime.value = elapsedTime * 5;
+    if (galaxyMaterial && galaxyMaterial.uniforms) {
+      galaxyMaterial.uniforms.uTime.value = elapsedTime * 5;
+    }
 
     // tells browser theres animation, update before the next repaint
     requestAnimationFrame(renderFrame);
@@ -898,13 +910,27 @@ Ammo().then((Ammo) => {
     enterWorld();
   };
 
-  manager.onError = function (url) {};
+  manager.onError = function (url) {
+    // Still allow boot if a single asset 404s (common on mobile caches)
+    console.warn('Asset failed:', url);
+  };
+
+  // Safety net: never leave users stuck on the Loading spinner
+  setTimeout(function () {
+    enterWorld();
+  }, 8000);
 
   // Mobile: no on-screen joystick — tilt the phone to roll the earth
 
   //initialize world and begin
   function start() {
-    createWorld();
+    try {
+      createWorld();
+    } catch (e) {
+      console.error('createWorld failed', e);
+      enterWorld();
+      return;
+    }
     if (isTouchscreenDevice()) {
       // ~2× farther behind the earth for a clearer phone view
       camera.position.set(0, 24, 56);
@@ -995,8 +1021,22 @@ Ammo().then((Ammo) => {
 
   //check if user's browser has WebGL capabilities
   if (WEBGL.isWebGLAvailable()) {
-    start();
+    try {
+      start();
+      // If nothing is tracked by LoadingManager, onLoad never fires — enter ASAP
+      setTimeout(function () {
+        enterWorld();
+      }, 2500);
+    } catch (e) {
+      console.error('start failed', e);
+      enterWorld();
+    }
   } else {
     noWebGL();
   }
+}).catch(function (err) {
+  console.error('Ammo init failed', err);
+  try {
+    hidePreloadOverlay();
+  } catch (e) {}
 });
