@@ -99,6 +99,7 @@ export function touchEvent(coordinates) {
 }
 
 let tiltEnabled = false;
+let touchSteerEnabled = false;
 export let joystickActive = false;
 let tiltPermissionAsked = false;
 let lastOrientMs = 0;
@@ -285,6 +286,8 @@ export function setupDeviceTilt() {
  */
 export function enableTouchSteer() {
   if (!isTouchscreenDevice()) return;
+  if (touchSteerEnabled) return;
+  touchSteerEnabled = true;
 
   const maxRadius = 72;
 
