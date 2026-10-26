@@ -764,7 +764,7 @@ Ammo().then((Ammo) => {
   function moveBall(deltaTime) {
     // Stronger on touch so phone tilt / drag clearly rolls the globe
     // (ground friction is high — needs a hard push every frame)
-    let scalingFactor = isTouchscreenDevice() ? 52 : 18;
+    let scalingFactor = isTouchscreenDevice() ? 40 : 18;
     let moveX = moveDirection.right - moveDirection.left;
     let moveZ = moveDirection.back - moveDirection.forward;
     let moveY = ballObject.position.y < 2.01 ? 0 : -0.2;

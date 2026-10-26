@@ -289,7 +289,9 @@ export function enableTouchSteer() {
   if (touchSteerEnabled) return;
   touchSteerEnabled = true;
 
-  const maxRadius = 72;
+  // Larger radius + gain < 1 → gentler finger steering
+  const maxRadius = 110;
+  const touchGain = 0.38;
 
   const onStart = (ev) => {
     if (touchId != null) return;
@@ -326,7 +328,7 @@ export function enableTouchSteer() {
     const clamped = Math.min(dist, maxRadius);
     const nx = (dx / (dist || 1)) * clamped;
     const ny = (dy / (dist || 1)) * clamped;
-    setAxes(nx / maxRadius, ny / maxRadius);
+    setAxes((nx / maxRadius) * touchGain, (ny / maxRadius) * touchGain);
     // Prevent page scroll while steering
     if (ev.cancelable) ev.preventDefault();
   };
