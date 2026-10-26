@@ -9,7 +9,7 @@ Based on [0xFloyd/Portfolio_2020](https://github.com/0xFloyd/Portfolio_2020) (MI
 ## Controls
 
 - **Desktop:** arrow keys move the ball · click boxes to open links
-- **Mobile:** tilt-only (DeviceOrientation) — no on-screen joystick · tap boxes
+- **Mobile:** tilt the phone (tap “Enable tilt” on iOS) or drag your finger — no on-screen joystick · tap boxes
 
 There is no welcome splash / start gate — the world loads straight into play once assets are ready.
 

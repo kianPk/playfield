@@ -118,8 +118,10 @@ Ammo().then((Ammo) => {
     //  provides information to create a rigid body
     let rigidBodyStruct = new Ammo.btRigidBodyConstructionInfo(mass, motionState, colShape, localInertia);
     let body = new Ammo.btRigidBody(rigidBodyStruct);
-    body.setFriction(10);
-    body.setRollingFriction(10);
+    // Lower friction on phones so tilt / drag can overcome the ground
+    const groundFriction = isTouchscreenDevice() ? 2.2 : 10;
+    body.setFriction(groundFriction);
+    body.setRollingFriction(isTouchscreenDevice() ? 1.2 : 10);
 
     // add to world
     physicsWorld.addRigidBody(body);
@@ -170,10 +172,8 @@ Ammo().then((Ammo) => {
 
     let rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, colShape, localInertia);
     let body = new Ammo.btRigidBody(rbInfo);
-    //body.setFriction(4);
-    body.setRollingFriction(10);
-
-    //set ball friction
+    body.setFriction(isTouchscreenDevice() ? 1.4 : 4);
+    body.setRollingFriction(isTouchscreenDevice() ? 0.6 : 10);
 
     //once state is set to disable, dynamic interaction no longer calculated
     body.setActivationState(STATE.DISABLE_DEACTIVATION);
@@ -762,8 +762,9 @@ Ammo().then((Ammo) => {
   }
 
   function moveBall(deltaTime) {
-    // Stronger on touch so phone tilt clearly rolls the globe
-    let scalingFactor = isTouchscreenDevice() ? 32 : 18;
+    // Stronger on touch so phone tilt / drag clearly rolls the globe
+    // (ground friction is high — needs a hard push every frame)
+    let scalingFactor = isTouchscreenDevice() ? 52 : 18;
     let moveX = moveDirection.right - moveDirection.left;
     let moveZ = moveDirection.back - moveDirection.forward;
     let moveY = ballObject.position.y < 2.01 ? 0 : -0.2;
@@ -772,7 +773,7 @@ Ammo().then((Ammo) => {
     if (!physicsBody) return;
 
     const dt = Math.min(Math.max(deltaTime || 1 / 60, 0.001), 0.05);
-    const blend = 1 - Math.exp(-8 * dt);
+    const blend = 1 - Math.exp(-(isTouchscreenDevice() ? 14 : 8) * dt);
 
     if (moveX === 0 && moveY === 0 && moveZ === 0) {
       // Ease out residual horizontal speed when input stops
@@ -783,6 +784,7 @@ Ammo().then((Ammo) => {
       return;
     }
 
+    physicsBody.activate(true);
     const targetX = moveX * scalingFactor;
     const targetZ = moveZ * scalingFactor;
     const targetY = moveY * scalingFactor;
@@ -810,7 +812,7 @@ Ammo().then((Ammo) => {
       document.addEventListener('mousemove', launchHover);
     }, 600);
 
-    // Mobile: tilt phone to roll the earth (no joystick / no fullscreen gate)
+    // Mobile: tilt + finger-drag (no joystick / no fullscreen gate)
     try {
       enableMobileTilt();
     } catch (e) {}
@@ -897,10 +899,15 @@ Ammo().then((Ammo) => {
     enterWorld();
   }, 8000);
 
-  // Mobile: no on-screen joystick — tilt the phone to roll the earth
+  // Mobile: no on-screen joystick — tilt / finger-drag to roll the earth
 
   //initialize world and begin
   function start() {
+    // Arm mobile controls early so iOS can show the permission CTA ASAP
+    try {
+      if (isTouchscreenDevice()) enableMobileTilt();
+    } catch (e) {}
+
     try {
       createWorld();
     } catch (e) {
@@ -968,7 +975,7 @@ Ammo().then((Ammo) => {
     let touchText, instructionsText;
     if (isTouchscreenDevice()) {
       touchText = 'Touch boxes with your \nfinger to open links';
-      instructionsText = '   Tilt your phone to roll \nthe earth globe around.';
+      instructionsText = 'Tilt the phone — or drag\nyour finger — to roll the earth.';
     } else {
       touchText = 'Click on boxes with \nthe mouse to open links';
       instructionsText = 'Use the arrow keys on your \n keyboard to move the ball.';

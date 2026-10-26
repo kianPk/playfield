@@ -145,7 +145,38 @@ select {
   border-radius: 3px;
 }
 
-/* On-screen joystick removed — mobile uses device tilt only */
+/* On-screen joystick removed — mobile uses device tilt + finger drag */
+#tilt-enable-btn {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 40;
+  width: min(92vw, 360px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(8, 12, 18, 0.88);
+  color: #e8eef5;
+  font-family: "Roboto", system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+#tilt-enable-btn strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+#tilt-enable-btn span {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: rgba(232, 238, 245, 0.72);
+}
 
 .preload-overlay {
   height: 100%;
